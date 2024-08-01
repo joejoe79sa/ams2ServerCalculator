@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Checkbox Sum Calculator</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Checkbox Sum Calculator</h1>
+    <form id="checkboxForm">
+        <div id="checkboxes">
+            {% for item in data %}
+            <label>
+                <input type="checkbox" name="values" value="{{ item.value }}">
+                {{ item.name }} ({{ item.value }})
+            </label><br>
+            {% endfor %}
+        </div>
+    </form>
+    <button onclick="calculateSum()">Calculate Sum</button>
+    <p>Total Value: <span id="totalValue">0</span></p>
+
+    <h2>Enter Total Value to Populate Checkboxes</h2>
+    <input type="number" id="totalInput">
+    <button onclick="populateCheckboxes()">Populate Checkboxes</button>
+
+    <script>
+        function calculateSum() {
+            var selectedValues = [];
+            $('input[name="values"]:checked').each(function() {
+                selectedValues.push(parseInt($(this).val()));
+            });
+
+            $.ajax({
+                url: '/calculate',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({selected_values: selectedValues}),
+                success: function(response) {
+                    $('#totalValue').text(response.total_value);
+                }
+            });
+        }
+
+        function populateCheckboxes() {
+            var totalValue = parseInt($('#totalInput').val());
+
+            $.ajax({
+                url: '/populate',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({total_value: totalValue}),
+                success: function(response) {
+                    $('input[name="values"]').prop('checked', false);
+                    response.selected_values.forEach(function(value) {
+                        $('input[name="values"][value="' + value + '"]').prop('checked', true);
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+
